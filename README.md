@@ -1,7 +1,7 @@
 # 🌊 RisqMap / RisqMap - Real-time Flood Monitoring & Weather Insights (US-focused)
 
 <div align="center">
-  <img src="public/assets/ChatGPT Image 4 Sep 2025, 08.50.45.png" alt="RisqMap Logo" width="200"/>
+  <img src="public/logo1.png" alt="RisqMap Logo" width="200"/>
 
   <p align="center">
     <strong>Real-time flood monitoring, weather tracking, and multi-source alerts for US communities.</strong>
