@@ -139,15 +139,22 @@ export default function AlertsPage() {
         // Transform NOAA alerts to our Alert format
         const transformedAlerts: Alert[] = realAlerts.map(alert => ({
           id: alert.id,
-          level: alert.level as 'low' | 'medium' | 'high',
-          location: alert.location,
+          level: alert.level === 'critical' ? 'high' : 
+                 alert.level === 'danger' ? 'high' : 
+                 alert.level === 'warning' ? 'medium' : 'low',
+          location: alert.affectedAreas[0] || alert.regionId || 'Unknown Location',
           timestamp: new Date(alert.timestamp).toLocaleTimeString('en-US', {
             hour: '2-digit',
             minute: '2-digit'
           }),
-          reason: alert.reason,
-          details: alert.details,
+          reason: alert.title || alert.message,
+          details: alert.messageEn || alert.message,
           affectedAreas: alert.affectedAreas,
+          estimatedPopulation: undefined,
+          severity: alert.level === 'critical' ? 10 : 
+                    alert.level === 'danger' ? 8 : 
+                    alert.level === 'warning' ? 5 : 3
+        }));
           estimatedPopulation: alert.estimatedPopulation,
           severity: alert.severity
         }));
