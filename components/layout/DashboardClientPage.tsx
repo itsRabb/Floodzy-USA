@@ -527,10 +527,28 @@ export function DashboardClientPage({ initialData }) {
     <div className="bg-background">
       <main className="flex-1">
         <section className="relative overflow-hidden text-white">
-          {/* Clean gradient background */}
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-600/10 via-transparent to-transparent"></div>
+          <div className="absolute inset-0">
+            <Image
+              src="/assets/background.png"
+              alt="Swirling storm over the United States"
+              fill
+              priority
+              quality={80}
+              className="object-cover md:hidden"
+            />
+            <Image
+              src="/assets/background.png"
+              alt="Swirling storm over the United States"
+              fill
+              priority
+              quality={80}
+              className="object-cover hidden md:block"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-transparent z-10" />
+            {/* Additional Light Mode Overlay for readability if image is dark */}
+            <div className="absolute inset-0 bg-white/10 dark:bg-transparent mix-blend-overlay z-10" />
           </div>
+          
           <div className="relative z-10 container mx-auto px-4 sm:px-6 py-20 md:py-28">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
