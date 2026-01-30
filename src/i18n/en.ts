@@ -636,6 +636,56 @@ const en = {
             other: 'Other'
         }
     },
+    statistics: {
+        title: 'Data Statistics',
+        tabs: {
+            overview: 'Overview',
+            historical: 'Historical'
+        },
+        filters: {
+            button: 'Filters',
+            startDate: 'Start Date',
+            endDate: 'End Date'
+        },
+        overview: {
+            title: 'Disaster Statistics Overview',
+            realTime: 'Live',
+            subtitle: 'Real-time disaster monitoring and statistics',
+            stats: {
+                totalIncidents: 'Total Incidents',
+                descTotalIncidents: 'Total reported disaster incidents',
+                evacuees: 'Evacuees',
+                descEvacuees: 'People evacuated from affected areas',
+                casualties: 'Casualties',
+                descCasualties: 'Reported casualties and injuries',
+                damagedInfra: 'Damaged Infrastructure',
+                descDamagedInfra: 'Infrastructure units affected',
+                affectedAreas: 'Affected Areas',
+                descAffectedAreas: 'Geographic areas impacted',
+                preparedness: 'Preparedness Level',
+                descPreparedness: 'Community preparedness percentage'
+            }
+        },
+        gemini: {
+            welcome: '👋 Welcome to RisqMap Assistant!\n\nI can help you analyze:\n• Real-time flood status\n• Weather prediction and risk\n• Emergency action recommendations\n• Affected area information\n\nIs there anything you want to ask?',
+            suggestions: {
+                floodStatus: 'Flood status in my area',
+                weather: 'Today\'s weather forecast',
+                risk: 'Flood risk level',
+                evacuation: 'Evacuation recommendations',
+                trend: '5-day trend analysis',
+                pumps: 'Pump station condition',
+                quickAction: 'QUICK ACTION'
+            },
+            inputPlaceholder: 'Ask about flood conditions, weather, or evacuation...',
+            systemInfo: 'Connected to RisqMap system',
+            analyzing: 'Analyzing system data...',
+            locationRequest: 'To provide accurate information, I need permission to access your location. Please approve the location request that appears in your browser.',
+            locationSuccess: 'Your location was successfully obtained (Lat: {lat}, Lon: {lon}). Analyzing data...',
+            locationError: 'Failed to get location. I cannot provide specific information without location permission. You can try asking by mentioning a specific region name (example: "flood in Miami").',
+            error: 'An error occurred while analyzing: {message}'
+        }
+    },
     currentWeather: {
         button: 'Current Weather',
         title: 'Current Weather',

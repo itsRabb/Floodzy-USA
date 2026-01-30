@@ -13,6 +13,7 @@ import {
   Minimize2,
   Settings,
   AlertTriangle, // Import Alert Triangle for warning icon
+  Home, // Import Home icon for shelters
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/card';
@@ -34,6 +35,8 @@ interface MapControlsProps {
   showCrowdsourcedReports: boolean; // New: State for crowdsourced reports visibility
   onOfficialBPBDDataToggle: () => void; // New: Toggle for official BPBD data
   showOfficialBPBDData: boolean; // New: State for official BPBD data visibility
+  onSheltersToggle?: () => void; // NEW: Toggle for FEMA shelters
+  showShelters?: boolean; // NEW: State for shelters visibility
   showFullscreenButton?: boolean; // New: To hide the fullscreen button
 }
 
@@ -58,6 +61,8 @@ export function MapControls({
   showCrowdsourcedReports, // New: Destructure new prop
   onOfficialBPBDDataToggle, // New: Destructure new prop
   showOfficialBPBDData, // New: Destructure new prop
+  onSheltersToggle, // NEW: Destructure shelter toggle
+  showShelters, // NEW: Destructure shelter state
   showFullscreenButton = true, // New: Destructure with default value
 }: MapControlsProps) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -219,6 +224,26 @@ export function MapControls({
                       <EyeOff size={14} className="text-muted-foreground" />
                     )}
                   </Button>
+
+                  {/* NEW: Emergency Shelters Toggle Button */}
+                  {onSheltersToggle && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onSheltersToggle}
+                      className="w-full justify-between h-8 text-slate-900 dark:text-slate-100 border-slate-400 dark:border-slate-600"
+                    >
+                      <div className="flex items-center">
+                        <Home size={14} className="mr-2" />
+                        Emergency Shelters
+                      </div>
+                      {showShelters ? (
+                        <Eye size={14} className="text-success" />
+                      ) : (
+                        <EyeOff size={14} className="text-muted-foreground" />
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>

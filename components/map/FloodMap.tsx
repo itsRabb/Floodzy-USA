@@ -91,6 +91,7 @@ import {
   getLocationNameByCoords,
 } from '@/lib/geocodingService';
 import { GeocodingResponse } from '@/types/geocoding';
+import { fetchFEMAShelters, Shelter, getShelterTypeName, getShelterStatusColor } from '@/lib/shelters';
 
 const isValidLatLng = (latlng: any): latlng is [number, number] | { lat: number; lng: number; } => {
   if (Array.isArray(latlng) && latlng.length === 2 && typeof latlng[0] === 'number' && typeof latlng[1] === 'number') {
@@ -128,6 +129,7 @@ const weatherIcon = createCustomIcon('#3B82F6', '☀️');
 // NEW: Icons for Crowdsourced and Official BPBD Data
 const userReportIcon = createCustomIcon('#60A5FA', '👤'); // Blue for user reports
 const bpbdOfficialIcon = createCustomIcon('#EF4444', '🚨'); // Red for official BPBD data
+const shelterIcon = createCustomIcon('#10B981', '🏠'); // Green for emergency shelters
 
 // Helper to get color based on severity for new data types
 const getSeverityColor = (severity: 'Low' | 'Medium' | 'High' | 'Critical') => {
@@ -239,8 +241,10 @@ interface FloodMapProps {
   onFullscreenToggle: () => void; // Prop for fullscreen toggle function
   onMapLoad?: (map: any) => void; // NEW: Callback to get map instance
   showFullscreenButton?: boolean; // NEW: To hide the fullscreen button
-         activeLayer?: string | null; // NEW: Add activeLayer prop
-       }
+  activeLayer?: string | null; // NEW: Add activeLayer prop
+  showShelters?: boolean; // NEW: Toggle shelter display
+  shelters?: Shelter[]; // NEW: FEMA shelter data
+}
 
 function MapEffect({ onMapLoad, mapRef }: { onMapLoad?: (map: any) => void, mapRef: React.MutableRefObject<any | null> }) {
     const map = useMap();
@@ -282,9 +286,14 @@ export const FloodMap = React.memo(function FloodMap({
   onMapLoad, // NEW: Destructure onMapLoad
   showFullscreenButton, // NEW: Destructure showFullscreenButton
   activeLayer, // NEW: Destructure activeLayer
+  showShelters = true, // NEW: Shelter toggle (default true)
+  shelters: propShelters, // NEW: Destructure shelters prop
 }: FloodMapProps) {
   const weatherTileLayerUrl = propWeatherTileLayerUrl; // Assign to a local variable
   const [selectedLayer, setSelectedLayer] = useState('street');
+  const [shelters, setShelters] = useState<Shelter[]>(propShelters || []);
+  const [loadingShelters, setLoadingShelters] = useState(false);
+  const [showSheltersToggle, setShowSheltersToggle] = useState(showShelters);
   const [weatherTileUrl, setWeatherTileUrl] = useState<string | null>(null); // NEW: weatherTileUrl state
   const [weatherPopupCoords, setWeatherPopupCoords] = useState<[number, number] | null>(null);
 
@@ -330,7 +339,39 @@ export const FloodMap = React.memo(function FloodMap({
   const [floodZones] = useState<FloodZone[]>(FLOOD_ZONES_MOCK); // Original mock data
   const mapRef = useRef<any | null>(null);
 
-  
+  // Fetch FEMA shelters when component mounts or location changes
+  useEffect(() => {
+    if (!propShelters && showShelters) {
+      const loadShelters = async () => {
+        setLoadingShelters(true);
+        try {
+          // Fetch all open shelters (or add bounds filter if needed)
+          const fetchedShelters = await fetchFEMAShelters({ status: 'OPEN' });
+          setShelters(fetchedShelters);
+          console.log(`[FloodMap] Loaded ${fetchedShelters.length} FEMA shelters`);
+        } catch (error) {
+          console.error('[FloodMap] Error fetching shelters:', error);
+          toast.custom((t) => (
+            <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-slate-900/90 backdrop-blur-sm shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-red-500/50`}>
+              <div className="flex-1 w-0 p-4">
+                <div className="flex items-start">
+                  <div className="ml-3 flex-1">
+                    <p className="text-sm font-medium text-white">Failed to Load Shelters</p>
+                    <p className="mt-1 text-sm text-white/70">Unable to fetch FEMA shelter data</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ));
+        } finally {
+          setLoadingShelters(false);
+        }
+      };
+      loadShelters();
+    } else if (propShelters) {
+      setShelters(propShelters);
+    }
+  }, [propShelters, showShelters]);
 
   
 
@@ -1113,6 +1154,110 @@ export const FloodMap = React.memo(function FloodMap({
             }
             return null; // Do not render if there is no geographic data
           })}
+
+        {/* === DISPLAYING FEMA EMERGENCY SHELTERS === */}
+        {loadingShelters && showSheltersToggle && (
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1001] bg-gray-800/70 p-4 rounded-lg text-white text-sm">
+            Loading shelters...
+            <LoadingSpinner className="ml-2 inline-block" />
+          </div>
+        )}
+        {!loadingShelters &&
+          shelters &&
+          shelters.length > 0 &&
+          showSheltersToggle &&
+          shelters.map((shelter) => {
+            // Only render if we have valid coordinates
+            if (!isValidLatLng([shelter.latitude, shelter.longitude])) {
+              return null;
+            }
+
+            const statusColor = getShelterStatusColor(shelter.shelter_status);
+            const shelterType = getShelterTypeName(shelter.subfacility_code);
+
+            return (
+              <Marker
+                key={`shelter-${shelter.shelter_id}`}
+                position={[shelter.latitude, shelter.longitude]}
+                icon={shelterIcon}
+              >
+                <Popup>
+                  <Card className="min-w-[200px] sm:min-w-[280px] p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <h4 className="font-bold text-green-600 text-sm">
+                        🏠 Emergency Shelter
+                      </h4>
+                      <Badge 
+                        variant={shelter.shelter_status === 'OPEN' ? 'default' : 'secondary'}
+                        className={shelter.shelter_status === 'OPEN' ? 'bg-green-600' : 'bg-gray-500'}
+                      >
+                        {shelter.shelter_status}
+                      </Badge>
+                    </div>
+                    
+                    <h5 className="font-semibold text-base mb-2">{shelter.shelter_name}</h5>
+                    
+                    <div className="space-y-1 text-xs">
+                      <p className="text-muted-foreground">
+                        <strong>Address:</strong> {shelter.address}, {shelter.city}, {shelter.state} {shelter.zip}
+                      </p>
+                      
+                      <p className="text-muted-foreground">
+                        <strong>Type:</strong> {shelterType}
+                      </p>
+                      
+                      <p className="text-muted-foreground">
+                        <strong>Organization:</strong> {shelter.org_name}
+                      </p>
+                      
+                      {shelter.total_population > 0 && (
+                        <p className="text-muted-foreground">
+                          <strong>Current Occupancy:</strong> {shelter.total_population} people
+                        </p>
+                      )}
+                      
+                      {shelter.evacuation_capacity !== 'UNKNOWN' && (
+                        <p className="text-muted-foreground">
+                          <strong>Evacuation Capacity:</strong> {shelter.evacuation_capacity}
+                        </p>
+                      )}
+                      
+                      {shelter.hours_open !== 'UNKNOWN' && shelter.hours_close !== 'UNKNOWN' && (
+                        <p className="text-muted-foreground">
+                          <strong>Hours:</strong> {shelter.hours_open} - {shelter.hours_close}
+                        </p>
+                      )}
+                      
+                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <p className="text-xs font-semibold mb-1">Accessibility:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {shelter.ada_compliant !== 'UNKNOWN' && (
+                            <Badge variant="outline" className="text-xxs">
+                              {shelter.ada_compliant ? '♿ ADA Compliant' : 'Not ADA Compliant'}
+                            </Badge>
+                          )}
+                          {shelter.wheelchair_accessible !== 'UNKNOWN' && (
+                            <Badge variant="outline" className="text-xxs">
+                              {shelter.wheelchair_accessible ? '♿ Wheelchair Access' : 'No Wheelchair Access'}
+                            </Badge>
+                          )}
+                          {shelter.pet_accommodations_code !== 'UNKNOWN' && (
+                            <Badge variant="outline" className="text-xxs">
+                              🐾 Pet-Friendly
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-xs text-green-600 mt-3 font-semibold">
+                      📊 Real-time FEMA NSS Data
+                    </p>
+                  </Card>
+                </Popup>
+              </Marker>
+            );
+          })}
       </MapContainer>
 
       {/* Map Controls */}
@@ -1133,6 +1278,8 @@ export const FloodMap = React.memo(function FloodMap({
         showCrowdsourcedReports={showCrowdsourcedReports} // New: Pass state
         onOfficialBPBDDataToggle={() => setShowOfficialBPBDData(!showOfficialBPBDData)} // New: Pass toggle function
         showOfficialBPBDData={showOfficialBPBDData} // New: Pass state
+        onSheltersToggle={() => setShowSheltersToggle(!showSheltersToggle)} // NEW: Pass shelter toggle function
+        showShelters={showSheltersToggle} // NEW: Pass shelter state
         showFullscreenButton={showFullscreenButton}
       />
 
