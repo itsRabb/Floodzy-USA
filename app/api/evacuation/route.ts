@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     // Try fetching from FEMA shelters API first
     console.log('[Evacuation API] Attempting to fetch from FEMA shelters API...');
     
-    const femaShelters = await fetchFEMAShelters({ limit: 50 });
+    const femaShelters = await fetchFEMAShelters();
     
     if (femaShelters && femaShelters.length > 0) {
       console.log(`[Evacuation API] ✅ Fetched ${femaShelters.length} shelters from FEMA data`);
